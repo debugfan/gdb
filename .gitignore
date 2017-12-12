@@ -45,3 +45,28 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+.deps
+.libs
+*.o
+*.lo
+*.exe
+*.a
+*.la
+*.cache
+*.log
+*.status
+*.tmp
+*.so
+build-gnulib
+build-gnulib-gdbserver
+libtool
+gdb/data-directory/python
+gdb/data-directory/syscalls
+gdb/data-directory/stamp-python
+gdb/data-directory/stamp-syscalls
+stamp-h
+stamp-h1
+stamp-xml
+stamp-lib
+config.h
+Makefile

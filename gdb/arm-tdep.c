@@ -65,6 +65,11 @@
 #include "features/arm-with-vfpv3.c"
 #include "features/arm-with-neon.c"
 
+
+#include "vcpsr_cmd.h"
+#include "code_vcpsr_map.h"
+
+
 static int arm_debug;
 
 /* Macros for setting and testing a bit in a minimal symbol that marks
@@ -436,6 +441,15 @@ arm_pc_is_thumb (struct gdbarch *gdbarch, CORE_ADDR memaddr)
      "display/i $pc" always show the correct mode (though if there is
      a symbol table we will not reach here, so it still may not be
      displayed in the mode it will be executed).  */
+	if(1)
+		{
+			unsigned int vcpsr;
+			if(get_vcpsr_by_addr((unsigned char *)memaddr, &vcpsr))
+				{
+					return vcpsr & 0x20;
+				}
+		}
+  
   if (target_has_registers)
     return arm_frame_is_thumb (get_current_frame ());
 

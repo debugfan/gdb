@@ -746,7 +746,9 @@ SFILES = ada-exp.y ada-lang.c ada-typeprint.c ada-valprint.c ada-tasks.c \
 	regset.c sol-thread.c windows-termcap.c \
 	common/common-utils.c common/xml-utils.c \
 	common/ptid.c common/buffer.c gdb-dlfcn.c common/agent.c \
-	common/format.c
+	common/format.c \
+    vcpsr_cmd.c \
+    code_vcpsr_map.c
 
 LINTFILES = $(SFILES) $(YYFILES) $(CONFIG_SRCS) init.c
 
@@ -919,7 +921,9 @@ COMMON_OBS = $(DEPFILES) $(CONFIG_OBS) $(YYOBJ) \
 	inferior.o osdata.o gdb_usleep.o record.o gcore.o \
 	jit.o progspace.o skip.o probe.o \
 	common-utils.o buffer.o ptid.o gdb-dlfcn.o common-agent.o \
-	format.o
+	format.o \
+    vcpsr_cmd.o \
+    code_vcpsr_map.o
 
 TSOBS = inflow.o
 

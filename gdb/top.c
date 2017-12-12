@@ -48,6 +48,7 @@
 #include "python/python.h"
 #include "interps.h"
 #include "observer.h"
+#include "vcpsr_cmd.h"
 
 /* readline include files.  */
 #include "readline/readline.h"
@@ -432,6 +433,18 @@ execute_command (char *p, int from_tty)
 
   while (*p == ' ' || *p == '\t')
     p++;
+
+  if(strncmp(p, "v", strlen("v")) == 0)
+  	{
+  		if(vcpsr_command(p))
+  		{
+			while(*p != 0)
+			{
+				p++;
+			}
+  		}
+  	}
+  
   if (*p)
     {
       char *arg;

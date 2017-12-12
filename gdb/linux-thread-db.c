@@ -848,6 +848,119 @@ try_thread_db_load_1 (struct thread_db_info *info)
   return 1;
 }
 
+int static_link_thread_db(struct thread_db_info *info)
+{
+	  td_err_e err;
+	
+	  /* Initialize pointers to the dynamic library functions we will use.
+		 Essential functions first.  */
+	
+	  info->td_init_p = td_init;
+	  if (info->td_init_p == NULL)
+		return 0;
+	
+	  err = info->td_init_p ();
+	  if (err != TD_OK)
+		{
+		  warning (_("Cannot initialize libthread_db: %s"),
+			   thread_db_err_str (err));
+		  return 0;
+		}
+	
+	  info->td_ta_new_p = td_ta_new;
+	  if (info->td_ta_new_p == NULL)
+		return 0;
+	
+	  /* Initialize the structure that identifies the child process.  */
+	  info->proc_handle.ptid = inferior_ptid;
+	
+	  /* Now attempt to open a connection to the thread library.  */
+	  err = info->td_ta_new_p (&info->proc_handle, &info->thread_agent);
+	  if (err != TD_OK)
+		{
+		  if (libthread_db_debug)
+		printf_unfiltered (_("td_ta_new failed: %s\n"),
+				   thread_db_err_str (err));
+		  else
+			switch (err)
+			  {
+				case TD_NOLIBTHREAD:
+#ifdef THREAD_DB_HAS_TD_VERSION
+				case TD_VERSION:
+#endif
+				  /* The errors above are not unexpected and silently ignored:
+					 they just mean we haven't found correct version of
+					 libthread_db yet.	*/
+				  break;
+				default:
+				  warning (_("td_ta_new failed: %s"), thread_db_err_str (err));
+			  }
+		  return 0;
+		}
+	
+	  info->td_ta_map_id2thr_p = td_ta_map_id2thr;
+	  if (info->td_ta_map_id2thr_p == NULL)
+		return 0;
+	
+	  info->td_ta_map_lwp2thr_p = td_ta_map_lwp2thr;
+	  if (info->td_ta_map_lwp2thr_p == NULL)
+		return 0;
+	
+	  info->td_ta_thr_iter_p = td_ta_thr_iter;
+	  if (info->td_ta_thr_iter_p == NULL)
+		return 0;
+	
+	  info->td_thr_validate_p = td_thr_validate;
+	  if (info->td_thr_validate_p == NULL)
+		return 0;
+	
+	  info->td_thr_get_info_p = td_thr_get_info;
+	  if (info->td_thr_get_info_p == NULL)
+		return 0;
+	
+	  /* These are not essential.  */
+	  info->td_ta_event_addr_p = td_ta_event_addr;
+	  info->td_ta_set_event_p = td_ta_set_event;
+	  info->td_ta_clear_event_p = td_ta_clear_event;
+	  info->td_ta_event_getmsg_p = td_ta_event_getmsg;
+	  info->td_thr_event_enable_p = td_thr_event_enable;
+	  info->td_thr_tls_get_addr_p = td_thr_tls_get_addr;
+	
+	  if (thread_db_find_new_threads_silently (inferior_ptid) != 0)
+		{
+		  /* Even if libthread_db initializes, if the thread list is
+			 corrupted, we'd not manage to list any threads.  Better reject this
+			 thread_db, and fall back to at least listing LWPs.  */
+		  return 0;
+		}
+	
+	  printf_unfiltered (_("[Thread debugging using libthread_db enabled]\n"));
+	
+	  if (libthread_db_debug || *libthread_db_search_path)
+		{
+		  const char *library;
+	
+		  library = dladdr_to_soname (*info->td_ta_new_p);
+		  if (library == NULL)
+		library = LIBTHREAD_DB_SO;
+	
+		  printf_unfiltered (_("Using host libthread_db library \"%s\".\n"),
+				 library);
+		}
+	
+	  /* The thread library was detected.  Activate the thread_db target
+		 if this is the first process using it.  */
+	  if (thread_db_list->next == NULL)
+		push_target (&thread_db_ops);
+	
+	  /* Enable event reporting, but not when debugging a core file.  */
+	  if (target_has_execution)
+		enable_thread_event_reporting ();
+	
+	  return 1;
+
+}
+
 /* Attempt to use LIBRARY as libthread_db.  LIBRARY could be absolute,
    relative, or just LIBTHREAD_DB.  */
 
